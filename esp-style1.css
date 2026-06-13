@@ -1,0 +1,164 @@
+/* UTIPEC Dashboard Style 
+   Diseño moderno corregido para evitar gráficas gigantes
+*/
+
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #27ae60;
+    --error-color: #e74c3c;
+    --info-color: #3498db;
+    --bg-color: #f4f7f6;
+    --card-bg: #ffffff;
+    --text-main: #333333;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+/* Header */
+.header {
+    background: var(--primary-color);
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+}
+
+/* Contenedor Principal */
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+/* Tarjetas (Cards) */
+.card {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    margin-bottom: 25px;
+}
+
+.card h3 {
+    margin-top: 0;
+    color: var(--secondary-color);
+    border-bottom: 2px solid #f1f1f1;
+    padding-bottom: 10px;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+}
+
+/* Formulario de Filtros */
+.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+}
+
+.input-group label {
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #666;
+}
+
+.input-group input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.actions { display: flex; gap: 10px; }
+
+.btn-filter, .btn-reset {
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+}
+
+.btn-filter { background: var(--accent-color); color: white; }
+.btn-reset { background: #95a5a6; color: white; }
+
+/* Indicadores (Gauges) */
+.gauges-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.gauge-card { text-align: center; }
+
+.gauge-value {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.gauge-visual {
+    background: #e9ecef;
+    height: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.bar { height: 100%; transition: width 0.8s ease; }
+.temp-bar { background: linear-gradient(90deg, #3498db, #e74c3c); }
+.humi-bar { background: linear-gradient(90deg, #aed6f1, #3498db); }
+
+/* --- CORRECCIÓN DE LA GRÁFICA --- */
+.chart-container {
+    position: relative;
+    margin: auto;
+    height: 400px; /* Limitamos la altura de la caja */
+    width: 100%;
+}
+
+.chart-container canvas {
+    /* Forzamos al canvas a no exceder el tamaño del padre */
+    max-height: 100% !important;
+    width: 100% !important;
+}
+
+/* Tabla de Datos */
+.table-container { overflow-x: auto; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th { background-color: #f8f9fa; padding: 15px; border-bottom: 2px solid #dee2e6; }
+td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .chart-container { height: 300px; } /* Más pequeña en móviles */
+    .gauges-container { grid-template-columns: 1fr; }
+    .filter-form { flex-direction: column; align-items: stretch; }
+}
+
