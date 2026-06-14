@@ -13,8 +13,8 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 'TuContrasenaSegura2026*$'
-      MYSQL_DATABASE: bd_sistema_nuevo
+      MYSQL_ROOT_PASSWORD: 'Utipec2025*'
+      MYSQL_DATABASE: estacionesp32
     volumes:
       - data_sistema_nuevo:/var/lib/mysql
 
