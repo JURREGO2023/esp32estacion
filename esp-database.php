@@ -2,8 +2,8 @@
 
 
 // --- CONFIGURACIÓN DE CONEXIÓN ---
-$servername = "173.201.182.15";
-$username   = "rootactualizacion";
+$servername = "bd";
+$username   = "root";
 $password   = "Utipec2025*";
 $dbname     = "estacionesp32";
 
