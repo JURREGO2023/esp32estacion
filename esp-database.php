@@ -2,7 +2,7 @@
 
 
 // --- CONFIGURACIÓN DE CONEXIÓN ---
-$servername = "bd";
+$servername = "db";
 $username   = "root";
 $password   = "Utipec2025*";
 $dbname     = "estacionesp32";
