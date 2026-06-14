@@ -16,7 +16,7 @@ services:
       MYSQL_ROOT_PASSWORD: 'Utipec2025*'
       MYSQL_DATABASE: estacionesp32
     volumes:
-      - data_sistema_nuevo:/var/lib/mysql
+      - data_sistema_nuevo_2:/var/lib/mysql
 
   phpmyadmin:
     image: phpmyadmin:latest
@@ -26,4 +26,4 @@ services:
       PMA_PORT: 3306
 
 volumes:
-  data_sistema_nuevo:
+  data_sistema_nuevo_2:
