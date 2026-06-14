@@ -1,4 +1,4 @@
-Dockerfile
+
 FROM php:8.2-apache
 
 # 1. Copiar todos tus archivos de Git a la carpeta pública de Apache
