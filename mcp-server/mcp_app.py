@@ -86,4 +86,4 @@ def obtener_estadisticas_clima(limite: int = 50) -> str:
 
 if __name__ == "__main__":
     # Arrancamos el servidor FastMCP
-    mcp.run()
+    mcp.run(transport="sse", host="0.0.0.0", port=8000)
