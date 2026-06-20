@@ -1,0 +1,2 @@
+fastmcp
+mysql-connector-python
