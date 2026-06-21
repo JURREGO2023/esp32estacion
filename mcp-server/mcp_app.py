@@ -84,6 +84,39 @@ def obtener_estadisticas_clima(limite: int = 50) -> str:
             cursor.close()
             conexion.close()
 
+def obtener_temperatura_minima() -> str:
+    """
+    Busca en la base de datos el registro histórico con la temperatura más baja.
+    """
+    try:
+        # Asegúrate de usar las variables de entorno o credenciales que ya tienes en tu código
+        conexion = mysql.connector.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME
+        )
+        cursor = conexion.cursor(dictionary=True)
+        
+        # Ajusta "SensorData" al nombre real de tu tabla de la ESP32 (ej. 'datos_clima', 'lecturas')
+        # Ajusta "temperatura", "humedad" y "fecha" a los nombres reales de tus columnas
+        query = "SELECT temperatura, humedad, fecha FROM SensorData ORDER BY temperatura ASC LIMIT 1"
+        cursor.execute(query)
+        resultado = cursor.fetchone()
+        
+        if resultado:
+            return f"❄️ La temperatura histórica más baja fue {resultado['temperatura']}°C (con {resultado['humedad']}% de humedad), registrada el {resultado['fecha']}."
+        else:
+            return "No hay registros en la base de datos todavía."
+            
+    except Exception as e:
+        return f"Error al consultar la temperatura mínima: {str(e)}"
+    finally:
+        # Cerramos la conexión para no saturar Dokploy
+        if 'conexion' in locals() and conexion.is_connected():
+            cursor.close()
+            conexion.close()
+
 if __name__ == "__main__":
     # Arrancamos el servidor FastMCP
     mcp.run(transport="sse", host="0.0.0.0", port=8000)
