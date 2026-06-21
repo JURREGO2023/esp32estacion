@@ -1,5 +1,2 @@
 fastmcp
-uvicorn
 mysql-connector-python
-streamlit
-google-generativeai
