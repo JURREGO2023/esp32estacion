@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build:
-      context: ./php-app  # <--- EL SECRETO ESTÁ AQUÍ (Antes decía ".")
+      context: ./php-app
       dockerfile: Dockerfile
     restart: always
     depends_on:
@@ -27,7 +27,7 @@ services:
 
   mcp-ai:
     build:
-      context: ./mcp-server # <--- Y AQUÍ PARA PYTHON
+      context: ./mcp-server
     restart: always
     ports:
       - "8000:8000"
@@ -38,7 +38,8 @@ services:
       DB_NAME: estacionesp32
     depends_on:
       - db
-chat-web:
+
+  chat-web:
     image: ghcr.io/open-webui/open-webui:main
     restart: always
     ports:
@@ -48,7 +49,6 @@ chat-web:
     volumes:
       - chat_data:/app/backend/data
 
-# Y hasta el final del archivo, en la sección de volumes, agregas el nuevo volumen:
 volumes:
   data_sistema_nuevo_2:
   chat_data:
