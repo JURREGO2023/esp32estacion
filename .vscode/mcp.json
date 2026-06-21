@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "EstacionIoT": {
+      "url": "http://2.25.137.200:8000/sse"
+    }
+  }
+}

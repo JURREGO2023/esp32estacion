@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build:
-      context: .
+      context: ./php-app  # <--- EL SECRETO ESTÁ AQUÍ (Antes decía ".")
       dockerfile: Dockerfile
     restart: always
     depends_on:
@@ -24,6 +24,20 @@ services:
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
+
+  mcp-ai:
+    build:
+      context: ./mcp-server # <--- Y AQUÍ PARA PYTHON
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: 'Utipec2025*'
+      DB_NAME: estacionesp32
+    depends_on:
+      - db
 
 volumes:
   data_sistema_nuevo_2:
