@@ -2,17 +2,21 @@ import os
 import mysql.connector
 from fastmcp import FastMCP
 
-# Inicializamos el servidor FastMCP
+# ==========================
+# MCP
+# ==========================
 mcp = FastMCP("EstacionMeteorologicaIoT")
 
-# Configuración de BD basada en tu esp-database.php
-DB_HOST = os.environ.get("DB_HOST", "db")
-DB_USER = os.environ.get("DB_USER", "root")
-DB_PASSWORD = os.environ.get("DB_PASSWORD", "Utipec2025*")
-DB_NAME = os.environ.get("DB_NAME", "estacionesp32")
+# ==========================
+# Configuración BD
+# ==========================
+DB_HOST = os.getenv("DB_HOST", "db")
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "Utipec2025*")
+DB_NAME = os.getenv("DB_NAME", "estacionesp32")
 
-def get_db_connection():
-    """Crea y retorna la conexión a la base de datos."""
+
+def get_db():
     return mysql.connector.connect(
         host=DB_HOST,
         user=DB_USER,
@@ -20,46 +24,247 @@ def get_db_connection():
         database=DB_NAME
     )
 
-# LA SUPER HERRAMIENTA ÚNICA
-@mcp.tool()
-def obtener_reporte_climatico_completo() -> str:
-    """Extrae TODOS los datos climáticos al mismo tiempo: actual, mínimos y promedios para la IA."""
+
+def query_one(sql, params=None):
+    conexion = get_db()
+    cursor = conexion.cursor(dictionary=True)
+
     try:
-        conexion = get_db_connection()
-        cursor = conexion.cursor(dictionary=True)
-        
-        # 1. Última lectura (Actual)
-        cursor.execute("SELECT value1, value2, value3, reading_time FROM SensorData ORDER BY reading_time DESC LIMIT 1")
-        ultima = cursor.fetchone()
-        
-        # 2. Temperatura mínima histórica
-        cursor.execute("SELECT value1, value2, reading_time FROM SensorData ORDER BY value1 ASC LIMIT 1")
-        minima = cursor.fetchone()
-        
-        # 3. Promedios (últimos 1000 registros)
-        cursor.execute("SELECT AVG(value1) as t_avg, AVG(value2) as h_avg FROM (SELECT value1, value2 FROM SensorData ORDER BY reading_time DESC LIMIT 1000) AS sub")
-        promedios = cursor.fetchone()
-        
-        if not ultima:
-            return "Aún no hay datos registrados en la estación."
+        cursor.execute(sql, params or ())
+        return cursor.fetchone()
 
-        # Armamos el paquete de texto consolidado para enviarlo a Vercel
-        reporte = (
-            f"--- REPORTE CLIMÁTICO CONSOLIDADO ESP32 ---\n"
-            f"1. LECTURA ACTUAL: Temperatura {ultima['value1']}°C, Humedad {ultima['value2']}%, Presión {ultima['value3']}hPa (Fecha: {ultima['reading_time']})\n"
-            f"2. RÉCORD MÍNIMO HISTÓRICO: {minima['value1']}°C con {minima['value2']}% de humedad (Fecha: {minima['reading_time']})\n"
-            f"3. TENDENCIA RECIENTE (Últimos 1000 registros): Temperatura promedio {round(promedios['t_avg'], 2)}°C, Humedad promedio {round(promedios['h_avg'], 2)}%\n"
-        )
-        
-        return reporte
-
-    except Exception as err:
-        return f"Error al consultar la base de datos: {err}"
     finally:
-        if 'conexion' in locals() and conexion.is_connected():
-            cursor.close()
-            conexion.close()
+        cursor.close()
+        conexion.close()
+
+
+# ============================================================
+# 1. LECTURA ACTUAL
+# ============================================================
+
+@mcp.tool()
+def obtener_lectura_actual():
+    """
+    Devuelve la última lectura registrada por la estación meteorológica.
+
+    Úsese cuando el usuario pregunte:
+
+    - clima actual
+    - temperatura actual
+    - humedad actual
+    - presión actual
+    - cómo está el clima
+    """
+
+    sql = """
+        SELECT
+            value1,
+            value2,
+            value3,
+            reading_time
+        FROM SensorData
+        ORDER BY reading_time DESC
+        LIMIT 1
+    """
+
+    dato = query_one(sql)
+
+    if not dato:
+        return "No existen registros."
+
+    return (
+        f"Temperatura: {dato['value1']} °C\n"
+        f"Humedad: {dato['value2']} %\n"
+        f"Presión: {dato['value3']} hPa\n"
+        f"Fecha: {dato['reading_time']}"
+    )
+
+
+# ============================================================
+# 2. TEMPERATURA MÍNIMA POR FECHA
+# ============================================================
+
+@mcp.tool()
+def obtener_temperatura_minima_por_fecha(fecha: str):
+    """
+    Obtiene la temperatura mínima registrada en una fecha.
+
+    Formato:
+
+    YYYY-MM-DD
+
+    Ejemplo:
+
+    2026-06-28
+    """
+
+    sql = """
+        SELECT
+            MIN(value1) temperatura
+        FROM SensorData
+        WHERE DATE(reading_time)=%s
+    """
+
+    dato = query_one(sql, (fecha,))
+
+    if dato["temperatura"] is None:
+        return f"No existen registros para {fecha}"
+
+    return f"La temperatura mínima del {fecha} fue {dato['temperatura']} °C"
+
+
+# ============================================================
+# 3. TEMPERATURA MÁXIMA POR FECHA
+# ============================================================
+
+@mcp.tool()
+def obtener_temperatura_maxima_por_fecha(fecha: str):
+    """
+    Obtiene la temperatura máxima registrada en una fecha.
+
+    Formato:
+
+    YYYY-MM-DD
+    """
+
+    sql = """
+        SELECT
+            MAX(value1) temperatura
+        FROM SensorData
+        WHERE DATE(reading_time)=%s
+    """
+
+    dato = query_one(sql, (fecha,))
+
+    if dato["temperatura"] is None:
+        return f"No existen registros para {fecha}"
+
+    return f"La temperatura máxima del {fecha} fue {dato['temperatura']} °C"
+
+
+# ============================================================
+# 4. PROMEDIO DIARIO
+# ============================================================
+
+@mcp.tool()
+def obtener_promedio_por_fecha(fecha: str):
+    """
+    Calcula el promedio de temperatura, humedad y presión para una fecha.
+
+    Formato:
+
+    YYYY-MM-DD
+    """
+
+    sql = """
+        SELECT
+
+        ROUND(AVG(value1),2) temperatura,
+
+        ROUND(AVG(value2),2) humedad,
+
+        ROUND(AVG(value3),2) presion
+
+        FROM SensorData
+
+        WHERE DATE(reading_time)=%s
+    """
+
+    dato = query_one(sql, (fecha,))
+
+    if dato["temperatura"] is None:
+        return f"No existen registros para {fecha}"
+
+    return (
+        f"Promedios del {fecha}\n\n"
+        f"Temperatura: {dato['temperatura']} °C\n"
+        f"Humedad: {dato['humedad']} %\n"
+        f"Presión: {dato['presion']} hPa"
+    )
+
+
+# ============================================================
+# 5. REPORTE COMPLETO
+# ============================================================
+
+@mcp.tool()
+def obtener_reporte_climatico_completo():
+    """
+    Genera un resumen completo del estado de la estación meteorológica.
+
+    Incluye:
+
+    • lectura actual
+
+    • temperatura mínima histórica
+
+    • temperatura máxima histórica
+
+    • promedio reciente
+
+    Es la herramienta ideal cuando el usuario pide un reporte general.
+    """
+
+    conexion = get_db()
+    cursor = conexion.cursor(dictionary=True)
+
+    try:
+
+        cursor.execute("""
+            SELECT
+                value1,
+                value2,
+                value3,
+                reading_time
+            FROM SensorData
+            ORDER BY reading_time DESC
+            LIMIT 1
+        """)
+
+        actual = cursor.fetchone()
+
+        cursor.execute("""
+            SELECT
+                MIN(value1) minima,
+                MAX(value1) maxima,
+                ROUND(AVG(value1),2) promedio
+            FROM SensorData
+        """)
+
+        estadisticas = cursor.fetchone()
+
+        if not actual:
+            return "No existen registros."
+
+        return f"""
+REPORTE CLIMÁTICO
+
+Lectura actual
+
+Temperatura : {actual['value1']} °C
+Humedad     : {actual['value2']} %
+Presión     : {actual['value3']} hPa
+Fecha        : {actual['reading_time']}
+
+Estadísticas
+
+Temperatura mínima : {estadisticas['minima']} °C
+Temperatura máxima : {estadisticas['maxima']} °C
+Temperatura promedio : {estadisticas['promedio']} °C
+"""
+
+    finally:
+        cursor.close()
+        conexion.close()
+
+
+# ============================================================
+# INICIO MCP
+# ============================================================
 
 if __name__ == "__main__":
-    # Arrancamos el servidor FastMCP
-    mcp.run(transport="sse", host="0.0.0.0", port=8000)
+    mcp.run(
+        transport="sse",
+        host="0.0.0.0",
+        port=8000
+    )
